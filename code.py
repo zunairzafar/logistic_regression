@@ -44,7 +44,7 @@ def welcome_page():
 
     # Enter button to navigate to the main app
     if st.button("Enter"):
-        st.session_state.page = "main"
+        st.session_state.page = "main"  # Set the session state to 'main' page
 
 # Main page for the Logistic Regression Classifier
 def main_page():
@@ -122,4 +122,12 @@ def main_page():
 
 # Main app logic
 if __name__ == "__main__":
-    welcome_page()
+    # Check if the session state has the page variable
+    if 'page' not in st.session_state:
+        st.session_state.page = 'welcome'  # Default to welcome page
+
+    # Render the appropriate page
+    if st.session_state.page == 'welcome':
+        welcome_page()
+    elif st.session_state.page == 'main':
+        main_page()
