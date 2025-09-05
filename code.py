@@ -44,7 +44,7 @@ def welcome_page():
 
     # Enter button to navigate to the main app
     if st.button("Enter"):
-        main_page()
+        st.session_state.page = "main"
 
 # Main page for the Logistic Regression Classifier
 def main_page():
