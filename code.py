@@ -31,7 +31,7 @@ def draw_meshgrid(X):
 # Streamlit setup
 st.sidebar.markdown("# Logistic Regression Classifier")
 
-# Sidebar options
+# Sidebar options with input validation
 dataset = st.sidebar.selectbox(
     'Select Dataset',
     ('Binary', 'Multiclass')
@@ -42,51 +42,62 @@ penalty = st.sidebar.selectbox(
     ('l2', 'l1', 'elasticnet', 'none')
 )
 
-c_input = float(st.sidebar.number_input('C', value=1.0))
+# Validate 'C' input (must be a positive float)
+c_input = st.sidebar.number_input('C', value=1.0, min_value=0.01, step=0.01)
 
 solver = st.sidebar.selectbox(
     'Solver',
     ('newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga')
 )
 
-max_iter = int(st.sidebar.number_input('Max Iterations', value=100))
+# Validate 'max_iter' input (must be a positive integer)
+max_iter = st.sidebar.number_input('Max Iterations', value=100, min_value=1, step=1)
 
 multi_class = st.sidebar.selectbox(
     'Multi Class',
     ('auto', 'ovr', 'multinomial')
 )
 
-l1_ratio = float(st.sidebar.number_input('l1 Ratio', value=0.5))
+# Validate 'l1_ratio' input (must be between 0 and 1)
+l1_ratio = st.sidebar.number_input('l1 Ratio', value=0.5, min_value=0.0, max_value=1.0, step=0.05)
 
-# Load initial graph
-fig, ax = plt.subplots()
+# Ensure that all inputs are valid and handle errors gracefully
+if not (0.0 <= l1_ratio <= 1.0):
+    st.error("Invalid L1 ratio. Please enter a value between 0 and 1.")
+else:
+    # Load initial graph
+    fig, ax = plt.subplots()
 
-# Plot initial graph
-X, y = load_initial_graph(dataset, ax)
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-orig = st.pyplot(fig)
-
-# Run the Logistic Regression Algorithm when button is clicked
-if st.sidebar.button('Run Algorithm'):
-    orig.empty()  # Clear the previous plot
-
-    # Logistic Regression classifier
-    clf = LogisticRegression(
-        penalty=penalty, C=c_input, solver=solver, max_iter=max_iter,
-        multi_class=multi_class, l1_ratio=l1_ratio
-    )
-    clf.fit(X_train, y_train)
-
-    y_pred = clf.predict(X_test)
-
-    XX, YY, input_array = draw_meshgrid(X)
-    labels = clf.predict(input_array)
-
-    # Plot decision boundary
-    ax.contourf(XX, YY, labels.reshape(XX.shape), alpha=0.5, cmap='rainbow')
-    plt.xlabel("Col1")
-    plt.ylabel("Col2")
+    # Plot initial graph
+    X, y = load_initial_graph(dataset, ax)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
     orig = st.pyplot(fig)
 
-    # Display accuracy
-    st.subheader(f"Accuracy for Logistic Regression: {round(accuracy_score(y_test, y_pred), 2)}")
+    if st.sidebar.button('Run Algorithm'):
+        try:
+            orig.empty()  # Clear the previous plot
+
+            # Logistic Regression classifier
+            clf = LogisticRegression(
+                penalty=penalty, C=c_input, solver=solver, max_iter=max_iter,
+                multi_class=multi_class, l1_ratio=l1_ratio
+            )
+            clf.fit(X_train, y_train)
+
+            y_pred = clf.predict(X_test)
+
+            XX, YY, input_array = draw_meshgrid(X)
+            labels = clf.predict(input_array)
+
+            # Plot decision boundary
+            ax.contourf(XX, YY, labels.reshape(XX.shape), alpha=0.5, cmap='rainbow')
+            plt.xlabel("Col1")
+            plt.ylabel("Col2")
+            orig = st.pyplot(fig)
+
+            # Display accuracy
+            st.subheader(f"Accuracy for Logistic Regression: {round(accuracy_score(y_test, y_pred), 2)}")
+
+        except Exception as e:
+            st.error(f"An error occurred while running the algorithm: {str(e)}")
+
